@@ -19,7 +19,7 @@ namespace MCPServer
         public McpTools(string dbPath = "testdata.db")
         {
             _dbPath = dbPath;
-            InitializeDatabaseAsync();
+            InitializeDatabaseAsync().GetAwaiter().GetResult();
         }
 
         public async Task InitializeDatabaseAsync()
