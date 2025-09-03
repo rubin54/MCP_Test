@@ -111,7 +111,7 @@ using System.Text.Json.Serialization;
                             new
                             {
                                 name = "echo",
-                                description = "Echo back the input text",
+                                description = "Gibt den eingegebenen Text zurück (Test/Debug)",
                                 inputSchema = new
                                 {
                                     type = "object",
@@ -128,43 +128,122 @@ using System.Text.Json.Serialization;
                             },
                             new
                             {
-                                name = "sqlite_query",
-                                description = "Execute SQLite query on the employee database",
+                                name = "sql_connect",
+                                description = "Stellt eine sichere, schreibgeschützte Verbindung zu SQL Server her",
                                 inputSchema = new
                                 {
                                     type = "object",
                                     properties = new
                                     {
-                                        query = new
-                                        {
-                                            type = "string",
-                                            description = "SQL SELECT query to execute"
-                                        }
+                                        provider = new { type = "string", description = "Nur 'SqlServer' wird unterstützt" },
+                                        connectionString = new { type = "string", description = "Optional: komplette Verbindungszeichenfolge" },
+                                        server = new { type = "string", description = "Servername oder host,port" },
+                                        database = new { type = "string", description = "Datenbankname" },
+                                        user = new { type = "string", description = "SQL-Benutzername" },
+                                        password = new { type = "string", description = "SQL-Passwort" },
+                                        trustServerCertificate = new { type = "boolean", description = "Nur falls benötigt (z. B. Test)" },
+                                        integratedSecurity = new { type = "boolean", description = "Windows-Authentifizierung verwenden" }
                                     },
+                                    required = new[] { "provider" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_list_tables",
+                                description = "Listet Tabellen der verbundenen Datenbank auf (optional Schema-Filter)",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { schema = new { type = "string", description = "Schema-Filter, z. B. 'dbo'" } },
+                                    required = Array.Empty<string>()
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_list_stored_procedures",
+                                description = "Listet Stored Procedures der verbundenen Datenbank auf (optional Schema-Filter)",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { schema = new { type = "string", description = "Schema-Filter, z. B. 'dbo'" } },
+                                    required = Array.Empty<string>()
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_table_preview",
+                                description = "Zeigt die ersten Zeilen einer Tabelle an (nur Lesezugriff)",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { table = new { type = "string", description = "Schema.Tabelle oder Tabelle" }, top = new { type = "number", description = "Max. Zeilen (1-500), Standard 50" } },
+                                    required = new[] { "table" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_procedure_definition",
+                                description = "Liefert die T-SQL-Definition einer Stored Procedure",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { name = new { type = "string", description = "Schema.Name oder Name" } },
+                                    required = new[] { "name" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_table_relationships",
+                                description = "Zeigt eingehende/ausgehende Fremdschlüssel-Beziehungen einer Tabelle",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { table = new { type = "string", description = "Schema.Tabelle oder Tabelle" } },
+                                    required = new[] { "table" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_column_stats",
+                                description = "Berechnet Spalten-Statistiken (Anzahl, Nulls, Min/Max/Avg oder Distinct)",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { table = new { type = "string", description = "Schema.Tabelle oder Tabelle" } },
+                                    required = new[] { "table" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_describe_table",
+                                description = "Zeigt die Spalten einer Tabelle mit Typen und Nullable-Informationen",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { table = new { type = "string", description = "Schema.Tabelle oder Tabelle" } },
+                                    required = new[] { "table" }
+                                }
+                            },
+                            new
+                            {
+                                name = "sql_query",
+                                description = "Führt eine sichere SELECT-Abfrage aus (nur Lesezugriff, begrenzt)",
+                                inputSchema = new
+                                {
+                                    type = "object",
+                                    properties = new { query = new { type = "string", description = "SELECT-Abfrage (Kommentare erlaubt)" }, maxRows = new { type = "number", description = "Maximale Zeilen (1-1000), Standard 1000" }, timeoutSeconds = new { type = "number", description = "Timeout in Sekunden (1-60), Standard 30" } },
                                     required = new[] { "query" }
                                 }
                             },
                             new
                             {
-                                name = "read_excel",
-                                description = "Read Excel file and return its contents",
+                                name = "sql_nl_to_query",
+                                description = "Wandelt eine natürliche Frage in eine sichere SELECT-Abfrage um (optional ausführen)",
                                 inputSchema = new
                                 {
                                     type = "object",
-                                    properties = new
-                                    {
-                                        filePath = new
-                                        {
-                                            type = "string",
-                                            description = "Path to the Excel file"
-                                        },
-                                        sheetName = new
-                                        {
-                                            type = "string",
-                                            description = "Name of the sheet to read (optional)"
-                                        }
-                                    },
-                                    required = new[] { "filePath" }
+                                    properties = new { question = new { type = "string", description = "Natürliche Frage zur Datenbank" }, execute = new { type = "boolean", description = "Abfrage sofort ausführen (Standard: false)" }, maxRows = new { type = "number", description = "Maximale Zeilen (1-1000), Standard 100" }, timeoutSeconds = new { type = "number", description = "Timeout in Sekunden (1-60), Standard 30" } },
+                                    required = new[] { "question" }
                                 }
                             },
                             new
@@ -220,8 +299,17 @@ using System.Text.Json.Serialization;
                 return toolName switch
                 {
                     "echo" => HandleEchoTool(request),
-                    "sqlite_query" => HandleSqliteQueryTool(request),
-                    "read_excel" => HandleReadExcelTool(request),
+                    "sql_connect" => HandleSqlConnectTool(request),
+                    "sql_list_tables" => HandleSqlListTablesTool(request),
+                    "sql_list_stored_procedures" => HandleSqlListStoredProceduresTool(request),
+                    "sql_table_preview" => HandleSqlTablePreviewTool(request),
+                    "sql_procedure_definition" => HandleSqlProcedureDefinitionTool(request),
+                    "sql_table_relationships" => HandleSqlTableRelationshipsTool(request),
+                    "sql_column_stats" => HandleSqlColumnStatsTool(request),
+                    "sql_describe_table" => HandleSqlDescribeTableTool(request),
+                    "sql_query" => HandleSqlQueryTool(request),
+                    "sql_schema_overview" => HandleSqlSchemaOverviewTool(request),
+                    "sql_nl_to_query" => HandleSqlNaturalLanguageToQueryTool(request),
                     "generate_report" => HandleGenerateReportTool(request),
                     _ => new McpResponse
                     {
@@ -270,119 +358,243 @@ using System.Text.Json.Serialization;
             };
         }
 
-        private McpResponse HandleSqliteQueryTool(McpRequest request)
+        private McpResponse HandleSqlConnectTool(McpRequest request)
         {
             var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("provider", out var providerProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Provider is required" } };
+            }
 
+            try
+            {
+                string provider = providerProp.GetString() ?? "";
+                string? connectionString = args.Value.TryGetProperty("connectionString", out var c) ? c.GetString() : null;
+                string? server = args.Value.TryGetProperty("server", out var s) ? s.GetString() : null;
+                string? database = args.Value.TryGetProperty("database", out var d) ? d.GetString() : null;
+                string? user = args.Value.TryGetProperty("user", out var u) ? u.GetString() : null;
+                string? password = args.Value.TryGetProperty("password", out var p) ? p.GetString() : null;
+                bool? trust = args.Value.TryGetProperty("trustServerCertificate", out var t) ? t.GetBoolean() : null;
+                bool? integrated = args.Value.TryGetProperty("integratedSecurity", out var i) ? i.GetBoolean() : null;
+                string? sqlitePath = args.Value.TryGetProperty("sqliteFilePath", out var sp) ? sp.GetString() : null;
+
+                var result = _tools.ConfigureSqlConnection(provider, connectionString, server, database, user, password, trust, integrated, sqlitePath);
+                return new McpResponse
+                {
+                    Id = request.Id,
+                    Result = new { content = new[] { new { type = "text", text = result } } }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlListTablesTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            string? schema = null;
+            if (args.HasValue && args.Value.TryGetProperty("schema", out var s)) schema = s.GetString();
+            try
+            {
+                var result = _tools.ListTablesAsync(schema).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlListStoredProceduresTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            string? schema = null;
+            if (args.HasValue && args.Value.TryGetProperty("schema", out var s)) schema = s.GetString();
+            try
+            {
+                var result = _tools.ListStoredProceduresAsync(schema).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlTablePreviewTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("table", out var tableProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Table is required" } };
+            }
+            var table = tableProp.GetString() ?? "";
+            int top = 50;
+            if (args.Value.TryGetProperty("top", out var topProp) && topProp.ValueKind == JsonValueKind.Number)
+            {
+                top = Math.Clamp(topProp.GetInt32(), 1, 500);
+            }
+            try
+            {
+                var result = _tools.TablePreviewAsync(table, top).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlProcedureDefinitionTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("name", out var nameProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Name is required" } };
+            }
+            var name = nameProp.GetString() ?? "";
+            try
+            {
+                var result = _tools.GetStoredProcedureDefinitionAsync(name).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlTableRelationshipsTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("table", out var tableProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Table is required" } };
+            }
+            var table = tableProp.GetString() ?? "";
+            try
+            {
+                var result = _tools.GetTableRelationshipsAsync(table).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlColumnStatsTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("table", out var tableProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Table is required" } };
+            }
+            var table = tableProp.GetString() ?? "";
+            try
+            {
+                var result = _tools.GetColumnStatsAsync(table).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlDescribeTableTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
+            if (!args.HasValue || !args.Value.TryGetProperty("table", out var tableProp))
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Table is required" } };
+            }
+            var table = tableProp.GetString() ?? "";
+            try
+            {
+                var result = _tools.DescribeTableAsync(table).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlQueryTool(McpRequest request)
+        {
+            var args = request.Params?.Arguments;
             if (!args.HasValue || !args.Value.TryGetProperty("query", out var queryProp))
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = "Query parameter is required" }
-                };
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "Query is required" } };
             }
-
-            var query = queryProp.GetString();
-            if (string.IsNullOrEmpty(query))
+            var query = queryProp.GetString() ?? "";
+            int? maxRows = null;
+            int? timeoutSeconds = null;
+            if (args.Value.TryGetProperty("maxRows", out var mr) && mr.ValueKind == JsonValueKind.Number)
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = "Query cannot be empty" }
-                };
+                maxRows = Math.Clamp(mr.GetInt32(), 1, 1000);
             }
-
+            if (args.Value.TryGetProperty("timeoutSeconds", out var ts) && ts.ValueKind == JsonValueKind.Number)
+            {
+                timeoutSeconds = Math.Clamp(ts.GetInt32(), 1, 60);
+            }
             try
             {
-                // Since this is an async method, we need to handle it properly
-                var resultTask = _tools.ExecuteSqliteQueryAsync(query);
-                var result = resultTask.Result; // For simplicity in this context
-
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Result = new
-                    {
-                        content = new[]
-                        {
-                            new
-                            {
-                                type = "text",
-                                text = result
-                            }
-                        }
-                    }
-                };
+                var result = _tools.ExecuteSqlQueryAsync(query, maxRows, timeoutSeconds).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
             }
             catch (Exception ex)
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = ex.Message }
-                };
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
             }
         }
 
-        private McpResponse HandleReadExcelTool(McpRequest request)
+        private McpResponse HandleSqlSchemaOverviewTool(McpRequest request)
+        {
+            try
+            {
+                var result = _tools.GetSchemaOverviewAsync().Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
+            }
+            catch (Exception ex)
+            {
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
+            }
+        }
+
+        private McpResponse HandleSqlNaturalLanguageToQueryTool(McpRequest request)
         {
             var args = request.Params?.Arguments;
-
-            if (!args.HasValue || !args.Value.TryGetProperty("filePath", out var filePathProp))
+            if (!args.HasValue || !args.Value.TryGetProperty("question", out var qProp))
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = "FilePath parameter is required" }
-                };
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = "question ist erforderlich" } };
             }
-
-            var filePath = filePathProp.GetString();
-            if (string.IsNullOrEmpty(filePath))
+            var question = qProp.GetString() ?? "";
+            bool execute = args.Value.TryGetProperty("execute", out var exProp) && exProp.ValueKind == JsonValueKind.True;
+            int? maxRows = null;
+            int? timeoutSeconds = null;
+            if (args.Value.TryGetProperty("maxRows", out var mr) && mr.ValueKind == JsonValueKind.Number)
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = "FilePath cannot be empty" }
-                };
+                maxRows = Math.Clamp(mr.GetInt32(), 1, 1000);
             }
-
-            string? sheetName = null;
-            if (args.Value.TryGetProperty("sheetName", out var sheetNameProp))
+            if (args.Value.TryGetProperty("timeoutSeconds", out var ts) && ts.ValueKind == JsonValueKind.Number)
             {
-                sheetName = sheetNameProp.GetString();
+                timeoutSeconds = Math.Clamp(ts.GetInt32(), 1, 60);
             }
-
             try
             {
-                var result = _tools.ReadExcelFile(filePath, sheetName);
-
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Result = new
-                    {
-                        content = new[]
-                        {
-                            new
-                            {
-                                type = "text",
-                                text = result
-                            }
-                        }
-                    }
-                };
+                var result = _tools.NaturalLanguageToSelectAsync(question, execute, maxRows, timeoutSeconds).Result;
+                return new McpResponse { Id = request.Id, Result = new { content = new[] { new { type = "text", text = result } } } };
             }
             catch (Exception ex)
             {
-                return new McpResponse
-                {
-                    Id = request.Id,
-                    Error = new McpError { Message = ex.Message }
-                };
+                return new McpResponse { Id = request.Id, Error = new McpError { Message = ex.Message } };
             }
         }
+
 
         private McpResponse HandleGenerateReportTool(McpRequest request)
         {
